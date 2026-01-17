@@ -1,0 +1,25 @@
+# Query 1: Count errors in the last hour
+fields @timestamp, @message
+| filter @message like /ERROR/
+| stats count() by bin(5m)
+
+# Query 2: Top 10 slowest requests
+fields @timestamp, @message
+| filter @type = "request"
+| sort @duration desc
+| limit 10
+
+# Query 3: Application startup logs
+fields @timestamp, @message
+| filter @message like /starting/
+| sort @timestamp desc
+
+# Query 4: Failed health checks
+fields @timestamp, @message
+| filter @message like /health/ and @message like /fail/
+| stats count() by bin(1m)
+
+# Query 5: Memory usage over time
+fields @timestamp, @message
+| filter @type = "metric"
+| stats avg(memoryUsage) by bin(5m)
