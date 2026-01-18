@@ -27,3 +27,13 @@ output "application_log_group" {
   description = "Application CloudWatch log group"
   value       = module.monitoring.application_log_group_name
 }
+
+output "redis_endpoint" {
+  description = "Redis cluster endpoint"
+  value       = module.cache.redis_endpoint
+}
+
+output "redis_port" {
+  description = "Redis cluster port"
+  value       = module.cache.redis_port
+}

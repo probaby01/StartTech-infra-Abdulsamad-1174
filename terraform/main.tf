@@ -28,6 +28,18 @@ module "compute" {
   depends_on = [module.networking]
 }
 
+# Cache Module
+module "cache" {
+  source = "./modules/cache"
+
+  project_name           = var.project_name
+  vpc_id                 = module.networking.vpc_id
+  private_subnet_ids     = module.networking.private_subnet_ids
+  ec2_security_group_id  = module.compute.ec2_security_group_id
+
+  depends_on = [module.networking, module.compute]
+}
+
 # Monitoring Module
 module "monitoring" {
   source = "./modules/monitoring"
