@@ -37,24 +37,5 @@ variable "private_subnet_cidrs" {
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t2.micro"
-}
-
-variable "min_size" {
-  description = "Minimum number of instances in ASG"
-  type        = number
-  default     = 1
-}
-
-variable "max_size" {
-  description = "Maximum number of instances in ASG"
-  type        = number
-  default     = 3
-
-}
-
-variable "desired_capacity" {
-  description = "Desired number of instances in ASG"
-  type        = number
-  default     = 2
+  default     = "t3.micro"
 }

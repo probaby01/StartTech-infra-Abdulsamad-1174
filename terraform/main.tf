@@ -24,9 +24,6 @@ module "compute" {
   vpc_id            = module.networking.vpc_id
   public_subnet_ids = module.networking.public_subnet_ids
   instance_type     = var.instance_type
-  min_size          = var.min_size
-  max_size          = var.max_size
-  desired_capacity  = var.desired_capacity
 
   depends_on = [module.networking]
 }
@@ -35,10 +32,8 @@ module "compute" {
 module "monitoring" {
   source = "./modules/monitoring"
 
-  project_name      = var.project_name
-  asg_name          = module.compute.asg_name
-  target_group_arn  = module.compute.target_group_arn
-  alb_arn           = module.compute.alb_arn
+  project_name = var.project_name
+  instance_id  = module.compute.instance_id
 
   depends_on = [module.compute]
 }

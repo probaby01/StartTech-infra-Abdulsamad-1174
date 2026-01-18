@@ -1,46 +1,14 @@
-# Security Group for ALB
-resource "aws_security_group" "alb" {
-  name        = "${var.project_name}-alb-sg"
-  description = "Security group for Application Load Balancer"
-  vpc_id      = var.vpc_id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${var.project_name}-alb-sg"
-  }
-}
-
-# Security Group for EC2 Instances
+# Security Group for EC2 Instances (direct access)
 resource "aws_security_group" "ec2" {
   name        = "${var.project_name}-ec2-sg"
   description = "Security group for EC2 instances"
   vpc_id      = var.vpc_id
 
   ingress {
-    from_port       = 8080
-    to_port         = 8080
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
@@ -84,9 +52,9 @@ resource "aws_iam_role" "ec2" {
   }
 }
 
-# IAM Policy for CloudWatch Logs
-resource "aws_iam_role_policy" "ec2_cloudwatch" {
-  name = "${var.project_name}-ec2-cloudwatch-policy"
+# IAM Policy for CloudWatch and ECR
+resource "aws_iam_role_policy" "ec2_permissions" {
+  name = "${var.project_name}-ec2-permissions-policy"
   role = aws_iam_role.ec2.id
 
   policy = jsonencode({
@@ -101,6 +69,16 @@ resource "aws_iam_role_policy" "ec2_cloudwatch" {
           "logs:DescribeLogStreams"
         ]
         Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage"
+        ]
+        Resource = "*"
       }
     ]
   })
@@ -159,73 +137,26 @@ resource "aws_launch_template" "backend" {
   }
 }
 
-# Application Load Balancer
-resource "aws_lb" "main" {
-  name               = "${var.project_name}-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb.id]
-  subnets            = var.public_subnet_ids
+# Single EC2 Instance (instead of ASG for simplicity)
+resource "aws_instance" "backend" {
+  ami                    = data.aws_ami.amazon_linux_2.id
+  instance_type          = var.instance_type
+  subnet_id              = var.public_subnet_ids[0]
+  vpc_security_group_ids = [aws_security_group.ec2.id]
+  iam_instance_profile   = aws_iam_instance_profile.ec2.name
+
+  user_data = <<-EOF
+              #!/bin/bash
+              yum update -y
+              yum install -y docker
+              systemctl start docker
+              systemctl enable docker
+              usermod -a -G docker ec2-user
+              
+              echo "Backend instance ready"
+              EOF
 
   tags = {
-    Name = "${var.project_name}-alb"
-  }
-}
-
-# Target Group
-resource "aws_lb_target_group" "backend" {
-  name     = "${var.project_name}-tg"
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = var.vpc_id
-
-  health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-    timeout             = 5
-    interval            = 30
-    path                = "/health"
-    matcher             = "200"
-  }
-
-  tags = {
-    Name = "${var.project_name}-tg"
-  }
-}
-
-# ALB Listener
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.backend.arn
-  }
-}
-
-# Auto Scaling Group
-resource "aws_autoscaling_group" "backend" {
-  name                = "${var.project_name}-asg"
-  vpc_zone_identifier = var.public_subnet_ids
-  target_group_arns   = [aws_lb_target_group.backend.arn]
-  health_check_type   = "ELB"
-  health_check_grace_period = 300
-
-  min_size         = var.min_size
-  max_size         = var.max_size
-  desired_capacity = var.desired_capacity
-
-  launch_template {
-    id      = aws_launch_template.backend.id
-    version = "$Latest"
-  }
-
-  tag {
-    key                 = "Name"
-    value               = "${var.project_name}-backend-instance"
-    propagate_at_launch = true
+    Name = "${var.project_name}-backend-instance"
   }
 }

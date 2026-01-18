@@ -3,9 +3,9 @@ output "vpc_id" {
   value       = module.networking.vpc_id
 }
 
-output "alb_dns_name" {
-  description = "Application Load Balancer DNS name"
-  value       = module.compute.alb_dns_name
+output "backend_public_ip" {
+  description = "Backend instance public IP"
+  value       = module.compute.instance_public_ip
 }
 
 output "s3_bucket_name" {

@@ -31,32 +31,10 @@ resource "aws_cloudwatch_metric_alarm" "high_cpu" {
   alarm_description   = "This metric monitors EC2 CPU utilization"
 
   dimensions = {
-    AutoScalingGroupName = var.asg_name
+    InstanceId = var.instance_id
   }
 
   tags = {
     Name = "${var.project_name}-high-cpu-alarm"
-  }
-}
-
-# CloudWatch Metric Alarm - Unhealthy Hosts
-resource "aws_cloudwatch_metric_alarm" "unhealthy_hosts" {
-  alarm_name          = "${var.project_name}-unhealthy-hosts"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 1
-  metric_name         = "UnHealthyHostCount"
-  namespace           = "AWS/ApplicationELB"
-  period              = 60
-  statistic           = "Average"
-  threshold           = 0
-  alarm_description   = "Alert when there are unhealthy hosts"
-
-  dimensions = {
-    TargetGroup  = var.target_group_arn
-    LoadBalancer = var.alb_arn
-  }
-
-  tags = {
-    Name = "${var.project_name}-unhealthy-hosts-alarm"
   }
 }

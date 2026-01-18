@@ -6,4 +6,4 @@ variable "project_name" {
 variable "environment" {
   description = "Environment name"
   type        = string
-}e
+}

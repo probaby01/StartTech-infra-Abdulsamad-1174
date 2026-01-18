@@ -1,21 +1,11 @@
-output "alb_dns_name" {
-  description = "DNS name of the load balancer"
-  value       = aws_lb.main.dns_name
+output "instance_public_ip" {
+  description = "Public IP of the backend instance"
+  value       = aws_instance.backend.public_ip
 }
 
-output "alb_arn" {
-  description = "ARN of the load balancer"
-  value       = aws_lb.main.arn
-}
-
-output "target_group_arn" {
-  description = "ARN of the target group"
-  value       = aws_lb_target_group.backend.arn
-}
-
-output "asg_name" {
-  description = "Name of the Auto Scaling Group"
-  value       = aws_autoscaling_group.backend.name
+output "instance_id" {
+  description = "ID of the backend instance"
+  value       = aws_instance.backend.id
 }
 
 output "ec2_security_group_id" {

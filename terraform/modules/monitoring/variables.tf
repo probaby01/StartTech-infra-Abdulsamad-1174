@@ -3,17 +3,7 @@ variable "project_name" {
   type        = string
 }
 
-variable "asg_name" {
-  description = "Auto Scaling Group name"
-  type        = string
-}
-
-variable "target_group_arn" {
-  description = "Target Group ARN"
-  type        = string
-}
-
-variable "alb_arn" {
-  description = "ALB ARN"
+variable "instance_id" {
+  description = "EC2 instance ID"
   type        = string
 }
