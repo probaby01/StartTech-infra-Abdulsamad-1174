@@ -1,61 +1,32 @@
-# S3 Bucket for Frontend
+# 1. S3 Bucket (Private - No public access needed)
 resource "aws_s3_bucket" "frontend" {
   bucket = "${var.project_name}-frontend-${var.environment}"
-
-  tags = {
+  
+  # Conditional tags to avoid 403 Account Verification error
+  tags = var.enable_cloudfront_tags ? {
     Name = "${var.project_name}-frontend"
-  }
+  } : null
 }
 
-# S3 Bucket Public Access Block
+# 2. Block Public Access (Keep it private)
 resource "aws_s3_bucket_public_access_block" "frontend" {
   bucket = aws_s3_bucket.frontend.id
 
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
-# S3 Bucket Website Configuration
-resource "aws_s3_bucket_website_configuration" "frontend" {
-  bucket = aws_s3_bucket.frontend.id
-
-  index_document {
-    suffix = "index.html"
-  }
-
-  error_document {
-    key = "index.html"
-  }
+# 3. Origin Access Control (Modern replacement for OAI)
+resource "aws_cloudfront_origin_access_control" "frontend" {
+  name                              = "${var.project_name}-oac"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
 }
 
-# S3 Bucket Policy for Public Read
-resource "aws_s3_bucket_policy" "frontend" {
-  bucket = aws_s3_bucket.frontend.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid       = "PublicReadGetObject"
-        Effect    = "Allow"
-        Principal = "*"
-        Action    = "s3:GetObject"
-        Resource  = "${aws_s3_bucket.frontend.arn}/*"
-      }
-    ]
-  })
-
-  depends_on = [aws_s3_bucket_public_access_block.frontend]
-}
-
-# CloudFront Origin Access Identity
-resource "aws_cloudfront_origin_access_identity" "frontend" {
-  comment = "OAI for ${var.project_name} frontend"
-}
-
-# CloudFront Distribution
+# 4. CloudFront Distribution
 resource "aws_cloudfront_distribution" "frontend" {
   enabled             = true
   is_ipv6_enabled     = true
@@ -63,15 +34,9 @@ resource "aws_cloudfront_distribution" "frontend" {
   price_class         = "PriceClass_100"
 
   origin {
-    domain_name = aws_s3_bucket_website_configuration.frontend.website_endpoint
-    origin_id   = "S3-${aws_s3_bucket.frontend.id}"
-
-    custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
-    }
+    domain_name              = aws_s3_bucket.frontend.bucket_regional_domain_name
+    origin_id                = "S3-${aws_s3_bucket.frontend.id}"
+    origin_access_control_id = aws_cloudfront_origin_access_control.frontend.id
   }
 
   default_cache_behavior {
@@ -79,14 +44,10 @@ resource "aws_cloudfront_distribution" "frontend" {
     cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "S3-${aws_s3_bucket.frontend.id}"
     viewer_protocol_policy = "redirect-to-https"
-    compress               = true
-
+    
     forwarded_values {
       query_string = false
-
-      cookies {
-        forward = "none"
-      }
+      cookies { forward = "none" }
     }
 
     min_ttl     = 0
@@ -95,22 +56,44 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 
   restrictions {
-    geo_restriction {
-      restriction_type = "none"
-    }
+    geo_restriction { restriction_type = "none" }
   }
 
   viewer_certificate {
     cloudfront_default_certificate = true
   }
 
+  # SPA support for React Router
   custom_error_response {
-    error_code         = 404
+    error_code         = 403
     response_code      = 200
     response_page_path = "/index.html"
   }
 
-  tags = {
+  # Conditional tags for CloudFront
+  tags = var.enable_cloudfront_tags ? {
     Name = "${var.project_name}-cloudfront"
-  }
+  } : null
+}
+
+# 5. Bucket Policy (Allows ONLY CloudFront to read)
+resource "aws_s3_bucket_policy" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid      = "AllowCloudFrontServicePrincipalReadOnly"
+      Effect   = "Allow"
+      Principal = {
+        Service = "cloudfront.amazonaws.com"
+      }
+      Action   = "s3:GetObject"
+      Resource = "${aws_s3_bucket.frontend.arn}/*"
+      Condition = {
+        StringEquals = {
+          "AWS:SourceArn" = aws_cloudfront_distribution.frontend.arn
+        }
+      }
+    }]
+  })
 }
