@@ -13,9 +13,10 @@ output "s3_bucket_name" {
   value       = module.storage.bucket_name
 }
 
-output "s3_website_endpoint" {
-  description = "S3 website endpoint"
-  value       = module.storage.website_endpoint
+# FIXED: Changed from website_endpoint to cloudfront_domain_name
+output "frontend_url" {
+  description = "The URL of the website via CloudFront"
+  value       = module.storage.cloudfront_domain_name
 }
 
 output "backend_log_group" {
