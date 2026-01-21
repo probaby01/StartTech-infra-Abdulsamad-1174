@@ -1,0 +1,34 @@
+STARTTECH ASSESSMENT SUBMISSION - Abdulsamad (ID: 1174)
+
+REPOSITORY URLS:
+- Application: https://github.com/probaby01/StartTech-Abdulsamad-1174
+- Infrastructure: https://github.com/probaby01/StartTech-infra-Abdulsamad-1174
+
+AWS RESOURCES DEPLOYED:
+- Region: us-east-1
+- VPC: vpc-068b753d87653978d
+- EC2 Backend: 3.238.39.224 (t3.micro)
+- S3 Frontend: starttech-frontend-production
+- Redis: starttech-redis.vjpep3.0001.use1.cache.amazonaws.com:6379
+- MongoDB: MongoDB Atlas (cluster0.llat23q.mongodb.net)
+- CloudWatch: 2 log groups, CPU alarms configured
+
+CI/CD PIPELINES:
+- Frontend: Automated build, test, S3 deployment
+- Backend: Automated test, Docker build, ECR push
+- Both workflows passing ✅
+
+DOCUMENTATION:
+- README.md: Complete project overview
+- ARCHITECTURE.md: System architecture details
+- RUNBOOK.md: Operations guide
+
+NOTES:
+- CloudFront: Configuration ready but requires AWS account verification
+- ALB: Not supported due to account limitations (using direct EC2 access)
+- All core requirements completed and working
+- Security: GitHub Secrets for credentials, security scanning enabled
+
+LIVE ENDPOINTS:
+- Backend API: http://3.238.39.224:8080/health
+- Frontend: http://starttech-frontend-production.s3-website-us-east-1.amazonaws.com
