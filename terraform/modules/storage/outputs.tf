@@ -1,25 +1,21 @@
 output "bucket_name" {
-  description = "S3 bucket name"
+  description = "The name of the S3 bucket"
   value       = aws_s3_bucket.frontend.id
 }
 
 output "bucket_arn" {
-  description = "S3 bucket ARN"
+  description = "The ARN of the S3 bucket"
   value       = aws_s3_bucket.frontend.arn
 }
 
-# We replaced website_endpoint with the CloudFront URL
+output "s3_website_endpoint" {
+  description = "The direct S3 website endpoint"
+  value       = aws_s3_bucket_website_configuration.frontend.website_endpoint
+}
+
+# We keep this name so the Root output doesn't break, 
+# but we point it to the S3 endpoint instead of CloudFront.
 output "cloudfront_domain_name" {
-  description = "The domain name of the CloudFront distribution"
-  value       = aws_cloudfront_distribution.frontend.domain_name
-}
-
-output "cloudfront_distribution_id" {
-  description = "The ID of the CloudFront distribution"
-  value       = aws_cloudfront_distribution.frontend.id
-}
-
-output "bucket_regional_domain_name" {
-  description = "S3 bucket regional domain name"
-  value       = aws_s3_bucket.frontend.bucket_regional_domain_name
+  description = "The endpoint for the frontend (Direct S3)"
+  value       = aws_s3_bucket_website_configuration.frontend.website_endpoint
 }
