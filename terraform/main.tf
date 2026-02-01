@@ -25,8 +25,8 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "StartTech"
-      Environment = var.environment
+      Project     = "starttech"
+      Environment = "prod"
       Student     = "Abdulsamad-1174"
       ManagedBy   = "Terraform"
     }
