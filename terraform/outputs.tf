@@ -1,31 +1,56 @@
+# StartTech Infrastructure - Outputs
+# Student: Abdulsamad - 1174
+
+# Networking Outputs
 output "vpc_id" {
   description = "VPC ID"
   value       = module.networking.vpc_id
 }
 
+output "public_subnet_ids" {
+  description = "Public subnet IDs"
+  value       = module.networking.public_subnet_ids
+}
+
+output "private_subnet_ids" {
+  description = "Private subnet IDs"
+  value       = module.networking.private_subnet_ids
+}
+
+# Compute Outputs
+output "instance_id" {
+  description = "EC2 instance ID"
+  value       = module.compute.instance_id
+}
+
+output "instance_public_ip" {
+  description = "EC2 instance public IP"
+  value       = module.compute.instance_public_ip
+}
+
+# Storage Outputs
 output "s3_bucket_name" {
-  description = "S3 bucket name for frontend"
+  description = "S3 bucket name"
   value       = module.storage.bucket_name
 }
 
+output "s3_website_endpoint" {
+  description = "S3 website endpoint"
+  value       = module.storage.s3_website_endpoint
+}
+
 output "frontend_url" {
-  description = "The URL of the website (Direct S3 Endpoint)"
-  value       = module.storage.cloudfront_domain_name
+  description = "Frontend URL"
+  value       = "http://${module.storage.s3_website_endpoint}"
 }
 
-output "backend_public_ip" {
-  description = "Backend instance public IP"
-  # Note: If your compute module isn't finished yet, you might need to 
-  # comment this out temporarily to pass 'terraform validate'
-  value       = try(module.compute.instance_public_ip, "Pending deployment")
-}
-
+# Cache Outputs
 output "redis_endpoint" {
-  description = "Redis cluster endpoint"
-  value       = try(module.cache.redis_endpoint, "Pending deployment")
+  description = "Redis endpoint"
+  value       = module.cache.redis_endpoint
 }
 
 output "redis_port" {
-  description = "Redis cluster port"
-  value       = try(module.cache.redis_port, "6379")
+  description = "Redis port"
+  value       = module.cache.redis_port
 }

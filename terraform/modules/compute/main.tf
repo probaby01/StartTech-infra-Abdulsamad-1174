@@ -76,7 +76,8 @@ resource "aws_iam_role_policy" "ec2_permissions" {
           "ecr:GetAuthorizationToken",
           "ecr:BatchCheckLayerAvailability",
           "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage"
+          "ecr:BatchGetImage",
+          "ecr:DescribeRepositories" # <--- ADDED FOR REPO DISCOVERY
         ]
         Resource = "*"
       }
@@ -106,6 +107,7 @@ resource "aws_launch_template" "backend" {
   name_prefix   = "${var.project_name}-backend-"
   image_id      = data.aws_ami.amazon_linux_2.id
   instance_type = var.instance_type
+  key_name      = "starttech-new-key"
 
   iam_instance_profile {
     name = aws_iam_instance_profile.ec2.name
@@ -137,13 +139,14 @@ resource "aws_launch_template" "backend" {
   }
 }
 
-# Single EC2 Instance (instead of ASG for simplicity)
+# Single EC2 Instance
 resource "aws_instance" "backend" {
   ami                    = data.aws_ami.amazon_linux_2.id
   instance_type          = var.instance_type
   subnet_id              = var.public_subnet_ids[0]
   vpc_security_group_ids = [aws_security_group.ec2.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2.name
+  key_name               = "starttech-new-key"
 
   user_data = <<-EOF
               #!/bin/bash

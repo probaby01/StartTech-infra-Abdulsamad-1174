@@ -1,3 +1,5 @@
+# Networking Module - VPC, Subnets, Internet Gateway, Route Tables
+
 # VPC
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
@@ -5,7 +7,8 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
 
   tags = {
-    Name = "${var.project_name}-vpc"
+    Name    = "${var.project_name}-vpc"
+    Project = var.project_name
   }
 }
 
@@ -14,8 +17,14 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "${var.project_name}-igw"
+    Name    = "${var.project_name}-igw"
+    Project = var.project_name
   }
+}
+
+# Data source for availability zones
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
 # Public Subnets
@@ -27,7 +36,9 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "${var.project_name}-public-subnet-${count.index + 1}"
+    Name    = "${var.project_name}-public-subnet-${count.index + 1}"
+    Project = var.project_name
+    Type    = "Public"
   }
 }
 
@@ -39,11 +50,13 @@ resource "aws_subnet" "private" {
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = {
-    Name = "${var.project_name}-private-subnet-${count.index + 1}"
+    Name    = "${var.project_name}-private-subnet-${count.index + 1}"
+    Project = var.project_name
+    Type    = "Private"
   }
 }
 
-# Route Table for Public Subnets
+# Public Route Table
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
@@ -53,18 +66,31 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "${var.project_name}-public-rt"
+    Name    = "${var.project_name}-public-rt"
+    Project = var.project_name
   }
 }
 
-# Route Table Association for Public Subnets
+# Public Route Table Associations
 resource "aws_route_table_association" "public" {
   count          = length(aws_subnet.public)
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 
-# Data source for availability zones
-data "aws_availability_zones" "available" {
-  state = "available"
+# Private Route Table
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name    = "${var.project_name}-private-rt"
+    Project = var.project_name
+  }
+}
+
+# Private Route Table Associations
+resource "aws_route_table_association" "private" {
+  count          = length(aws_subnet.private)
+  subnet_id      = aws_subnet.private[count.index].id
+  route_table_id = aws_route_table.private.id
 }

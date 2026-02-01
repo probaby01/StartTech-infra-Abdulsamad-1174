@@ -1,0 +1,16 @@
+frontend_url = "http://starttech-frontend-prod-99532c5f.s3-website-us-east-1.amazonaws.com"
+instance_id = "i-0088833af9ed377be"
+instance_public_ip = "3.238.43.53"
+private_subnet_ids = [
+  "subnet-014d4d515403b9b04",
+  "subnet-0822ace4ae0dca017",
+]
+public_subnet_ids = [
+  "subnet-0fcff3247a066453e",
+  "subnet-072e5c1b2720b3b36",
+]
+redis_endpoint = "starttech-redis.vjpep3.0001.use1.cache.amazonaws.com"
+redis_port = 6379
+s3_bucket_name = "starttech-frontend-prod-99532c5f"
+s3_website_endpoint = "starttech-frontend-prod-99532c5f.s3-website-us-east-1.amazonaws.com"
+vpc_id = "vpc-098a4ecd4b3a1b1ad"

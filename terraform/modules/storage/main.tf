@@ -1,9 +1,15 @@
-# 1. S3 Bucket for Frontend
-resource "aws_s3_bucket" "frontend" {
-  bucket = "${var.project_name}-frontend-${var.environment}"
+# Generate a random suffix to ensure global uniqueness
+resource "random_id" "bucket_suffix" {
+  byte_length = 4
 }
 
-# 2. S3 Bucket Public Access Block (MUST BE FALSE for direct S3 hosting)
+# 1. S3 Bucket for Frontend
+resource "aws_s3_bucket" "frontend" {
+  # Added random hex to the name to avoid "BucketAlreadyExists" errors
+  bucket = "${var.project_name}-frontend-${var.environment}-${random_id.bucket_suffix.hex}"
+}
+
+# 2. S3 Bucket Public Access Block
 resource "aws_s3_bucket_public_access_block" "frontend" {
   bucket = aws_s3_bucket.frontend.id
 
@@ -43,9 +49,6 @@ resource "aws_s3_bucket_policy" "frontend" {
     ]
   })
 
+  # Ensures public access settings are applied before the policy
   depends_on = [aws_s3_bucket_public_access_block.frontend]
 }
-
-
-# REMOVED: CloudFront Origin Access Control
-# REMOVED: CloudFront Distribution
